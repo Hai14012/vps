@@ -1,8 +1,7 @@
 services:
-  - type: worker
-    name: vps-sshx            # đặt tên service theo ý bạn
-    env: docker               # dùng Dockerfile
-    plan: free                # gói Free, có thể đổi: starter, standard...
-    branch: main              # branch trong repo bạn muốn deploy
-    autoDeploy: true          # tự động deploy khi push code
-    dockerfilePath: ./Dockerfile
+  - type: web
+    name: my-sshx-web
+    env: docker
+    plan: free
+    autoDeploy: true
+    healthCheckPath: /
