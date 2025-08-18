@@ -1,19 +1,46 @@
-FROM debian:stable-slim
+FROM python:3.12.8-slim
 
+# Gói tiện ích tối thiểu
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    curl ca-certificates python3 bash tini && \
+    curl ca-certificates bash git tzdata tini && \
     rm -rf /var/lib/apt/lists/*
 
+# Cài neofetch (cách ổn định cho slim): tải script và đặt vào PATH
+RUN curl -fsSL https://raw.githubusercontent.com/dylanaraps/neofetch/master/neofetch \
+      -o /usr/local/bin/neofetch && \
+    chmod +x /usr/local/bin/neofetch
+
 WORKDIR /app
-# start.sh: chạy sshx nền + mở HTTP health server
-RUN echo '#!/usr/bin/env bash\n\
-set -e\n\
-echo "Starting sshx (background)..." \n\
-( curl -sSf https://sshx.io/get | sh -s run ) &\n\
-echo "Starting HTTP health server on $PORT..." \n\
-export PORT=${PORT:-8080}\n\
-python3 -m http.server ${PORT} --bind 0.0.0.0\n' > /app/start.sh && \
-    chmod +x /app/start.sh
+
+# start.sh: sshx tự reconnect + HTTP health + in neofetch lúc khởi động
+RUN echo '#!/usr/bin/env bash
+set -euo pipefail
+
+echo "[boot] Python:" $(python --version)
+echo "[boot] Neofetch:" $(command -v neofetch || echo "missing")
+neofetch || true
+
+# Health & favicon để khỏi 404
+mkdir -p health
+echo OK > health/index.html
+: > favicon.ico
+
+# HTTP server để Render thấy cổng mở
+export PORT="${PORT:-8080}"
+python -u -m http.server "$PORT" --bind 0.0.0.0 &
+echo "[http] listening on 0.0.0.0:${PORT}"
+
+# Vòng lặp giữ sshx luôn sống
+while true; do
+  echo "[sshx] starting..."
+  if curl -fsSL https://sshx.io/get | sh -s run; then
+    echo "[sshx] exited normally"
+  else
+    echo "[sshx] disconnected, retrying in 5s..."
+    sleep 5
+  fi
+done
+' > /app/start.sh && chmod +x /app/start.sh
 
 ENTRYPOINT ["/usr/bin/tini","--"]
 CMD ["/app/start.sh"]
