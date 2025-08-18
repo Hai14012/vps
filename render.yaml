@@ -1,7 +1,6 @@
 services:
   - type: web
-    name: my-sshx-web
+    name: vps-y0n5
     env: docker
-    plan: free
     autoDeploy: true
-    healthCheckPath: /
+    healthCheckPath: /health
