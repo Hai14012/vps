@@ -12,38 +12,37 @@ RUN curl -fsSL https://raw.githubusercontent.com/dylanaraps/neofetch/master/neof
 
 WORKDIR /app
 
-# Tạo start.sh bằng heredoc (tránh lỗi parse)
-RUN cat > /app/start.sh << 'EOF'
-#!/usr/bin/env bash
-set -euo pipefail
-
-echo "[boot] Python: $(python --version 2>&1)"
-echo "[boot] Neofetch: $(command -v neofetch || echo missing)"
-neofetch || true
-
-# Health & favicon để khỏi 404
-mkdir -p health
-echo OK > health/index.html
-: > favicon.ico
-
-# HTTP server để Render thấy cổng mở
-export PORT="${PORT:-8080}"
-python -u -m http.server "$PORT" --bind 0.0.0.0 &
-echo "[http] listening on 0.0.0.0:${PORT}"
-
-# Vòng lặp giữ sshx luôn sống và tự reconnect
-while true; do
-  echo "[sshx] starting..."
-  if curl -fsSL https://sshx.io/get | sh -s run; then
-    echo "[sshx] exited normally"
-  else
-    echo "[sshx] disconnected, retrying in 5s..."
-    sleep 5
-  fi
-done
-EOF
-
-RUN chmod +x /app/start.sh
+# Tạo start.sh bằng printf (tránh heredoc không tương thích)
+RUN printf '%s\n' \
+'#!/usr/bin/env bash' \
+'set -euo pipefail' \
+'' \
+'echo "[boot] Python: $(python --version 2>&1)"' \
+'echo "[boot] Neofetch: $(command -v neofetch || echo missing)"' \
+'neofetch || true' \
+'' \
+'# Health & favicon để khỏi 404' \
+'mkdir -p health' \
+'echo OK > health/index.html' \
+': > favicon.ico' \
+'' \
+'# HTTP server để Render thấy cổng mở' \
+'export PORT="${PORT:-8080}"' \
+'python -u -m http.server "$PORT" --bind 0.0.0.0 &' \
+'echo "[http] listening on 0.0.0.0:${PORT}"' \
+'' \
+'# Vòng lặp giữ sshx luôn sống và tự reconnect' \
+'while true; do' \
+'  echo "[sshx] starting..."' \
+'  if curl -fsSL https://sshx.io/get | sh -s run; then' \
+'    echo "[sshx] exited normally"' \
+'  else' \
+'    echo "[sshx] disconnected, retrying in 5s..."' \
+'    sleep 5' \
+'  fi' \
+'done' \
+> /app/start.sh \
+&& chmod +x /app/start.sh
 
 ENTRYPOINT ["/usr/bin/tini","--"]
 CMD ["/app/start.sh"]
