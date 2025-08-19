@@ -15,5 +15,6 @@
   "workspaceFolder": "/workspace",  // Thư mục làm việc trong container
   "settings": {
     "terminal.integrated.shell.linux": "/bin/bash"  // Cài đặt shell mặc định trong terminal
-  }
+  },
+  "postStartCommand": "docker logs -f $(docker ps -q --filter ancestor=vps_codeanywhere)"  // In log của container sau khi nó bắt đầu
 }
