@@ -1,1 +1,19 @@
-
+{
+  "name": "vps_codeanywhere",  // Tên container
+  "build": {
+    "dockerfile": "Dockerfile"  // Đường dẫn đến Dockerfile của bạn
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "dbaeumer.vscode-eslint",  // Cài đặt extensions (ví dụ: ESLint)
+        "streetsidesoftware.code-spell-checker"  // Extension Spell Checker
+      ]
+    }
+  },
+  "forwardPorts": [3000],  // Forward cổng 3000 từ container ra ngoài
+  "workspaceFolder": "/workspace",  // Thư mục làm việc trong container
+  "settings": {
+    "terminal.integrated.shell.linux": "/bin/bash"  // Cài đặt shell mặc định trong terminal
+  }
+}
