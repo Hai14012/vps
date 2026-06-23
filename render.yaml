@@ -1,6 +1,0 @@
-services:
-  - type: web
-    name: vps-y0n5
-    env: docker
-    autoDeploy: true
-    healthCheckPath: /health
